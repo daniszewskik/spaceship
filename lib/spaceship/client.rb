@@ -39,6 +39,7 @@ module Spaceship
     # Raised when 302 is received from portal request
     class AppleTimeoutError < StandardError; end
 
+    # Raised when 401 is received from portal request
     class UnauthorizedAccessError < StandardError; end
 
     # Authenticates with Apple's web services. This method has to be called once
@@ -201,16 +202,17 @@ module Spaceship
         sleep 3
         retry
       end
+      raise ex # re-raise the exception
     rescue UnauthorizedAccessError => ex
       if @loggedin
-        unless (tries -= 1).zero?
-          msg = "Auth error received: '#{ex.message}'.  Retrying after 3 seconds (remaining: #{tries})..."
+        #unless (tries -= 1).zero?
+          msg = "Auth error received: '#{ex.message}'. Login in again then retrying after 3 seconds (remaining: #{tries})..."
           puts msg
           logger.warn msg
           login # FIXME: We might not have the password here
           sleep 3
           retry
-        end
+        #end
       end
 
       raise ex # re-raise the exception
@@ -236,6 +238,9 @@ module Spaceship
     def request(method, url_or_path = nil, params = nil, headers = {}, &block)
       headers.merge!(csrf_tokens)
       headers.merge!({ 'User-Agent' => USER_AGENT })
+
+      # FIXME: url_or_path might be specified in block...
+      # NOTE: we don't log again when retrying
 
       # Before encoding the parameters, log them
       log_request(method, url_or_path, params)
@@ -272,8 +277,9 @@ module Spaceship
     def send_request(method, url_or_path, params, headers, &block)
       with_retry do
         response = @client.send(method, url_or_path, params, headers, &block)
-        @resp_hash = response.to_hash
-        if @resp_hash[:status] == 401
+        resp_hash = response.to_hash
+        logger.info("RESPONSE: #{resp_hash}")
+        if resp_hash[:status] == 401
           msg = "Auth lost"
           logger.warn msg
           raise UnauthorizedAccessError.new, "Unauthorized Access"
