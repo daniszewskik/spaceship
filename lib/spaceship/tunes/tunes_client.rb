@@ -124,6 +124,8 @@ module Spaceship
     end
 
     def send_login_request(user, password)
+      clear_user_cached_data
+
       data = {
         accountName: user,
         password: password,
@@ -800,6 +802,12 @@ module Spaceship
         retry
       end
       raise ex # re-raise the exception
+    end
+
+    def clear_user_cached_data
+      @content_provider_id = nil
+      @sso_token_for_image = nil
+      @sso_token_for_video = nil
     end
 
     # the contentProviderIr found in the UserDetail instance
