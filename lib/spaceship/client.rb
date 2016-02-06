@@ -66,8 +66,14 @@ module Spaceship
     end
 
     def initialize
+      options = {
+       request: {
+          timeout:       300,
+          open_timeout:  300
+        }
+      }
       @cookie = HTTP::CookieJar.new
-      @client = Faraday.new(self.class.hostname) do |c|
+      @client = Faraday.new(self.class.hostname, options) do |c|
         c.response :json, content_type: /\bjson$/
         c.response :xml, content_type: /\bxml$/
         c.response :plist, content_type: /\bplist$/
