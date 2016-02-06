@@ -1,0 +1,12 @@
+* time requests and log long running ones
+* unit tests for base client
+* make sure we don't send data with "errors = temporarily unable to save your changes"
+* handle Errno::EPIPE.
+  Maybe use httpclient instead ?
+* handle DU issues
+
+ideas
+* parametrize default timeout ?
+* make default timeout client specific ?
+* disable 302s ? 
+  https://github.com/lacostej/spaceship/commit/7b70b4a6a00ad6ee0b38ec43888cb9c496e117fe
