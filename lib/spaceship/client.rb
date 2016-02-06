@@ -196,7 +196,7 @@ module Spaceship
 
     def with_retry(tries = 5, &block)
       return block.call
-    rescue Faraday::Error::TimeoutError, AppleTimeoutError => ex # New Faraday version: Faraday::TimeoutError => ex
+    rescue Faraday::Error::ConnectionFailed, Faraday::Error::TimeoutError, AppleTimeoutError => ex # New Faraday version: Faraday::TimeoutError => ex
       unless (tries -= 1).zero?
         logger.warn("Timeout received: '#{ex.message}'.  Retrying after 3 seconds (remaining: #{tries})...")
         sleep 3
