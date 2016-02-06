@@ -349,13 +349,15 @@ module Spaceship
       raise "app_id is required" unless app_id
       raise "version_id is required" unless version_id.to_i > 0
 
-      r = request(:post) do |req|
-        req.url "ra/apps/#{app_id}/platforms/ios/versions/#{version_id}"
-        req.body = data.to_json
-        req.headers['Content-Type'] = 'application/json'
-      end
+      with_tunes_retry do
+        r = request(:post) do |req|
+          req.url "ra/apps/#{app_id}/platforms/ios/versions/#{version_id}"
+          req.body = data.to_json
+          req.headers['Content-Type'] = 'application/json'
+        end
 
-      handle_itc_response(r.body)
+        handle_itc_response(r.body)
+      end
     end
 
     #####################################################
@@ -786,6 +788,19 @@ module Spaceship
     end
 
     private
+
+    def with_tunes_retry(tries = 2, &block)
+      return block.call
+    rescue Spaceship::TunesClient::ITunesConnectTemporaryError => ex
+      unless (tries -= 1).zero?
+        msg = "Temporary save error received: '#{ex.message}'.  Retrying after 3 seconds (remaining: #{tries})..."
+        puts msg
+        logger.warn msg
+        sleep 3
+        retry
+      end
+      raise ex # re-raise the exception
+    end
 
     # the contentProviderIr found in the UserDetail instance
     def content_provider_id
