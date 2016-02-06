@@ -210,13 +210,21 @@ module Spaceship
         logger.warn msg
         login # FIXME: We might not have the password here
         sleep 3
+        debug_count_recovered
         retry
       end
-
       raise ex # re-raise the exception
     end
 
     private
+
+    # this mostly for troubleshooting while harderning the client
+    def debug_count_recovered
+      @recoveries_count = (@recoveries_count || 0) + 1
+      msg = "Succesfully recovered... (#{@recoveries_count} times!)"
+      puts msg
+      logger.warn msg
+    end
 
     # Is called from `parse_response` to store the latest csrf_token (if available)
     def store_csrf_tokens(response)
