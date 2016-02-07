@@ -205,14 +205,12 @@ module Spaceship
       raise ex # re-raise the exception
     rescue UnauthorizedAccessError => ex
       if @loggedin
-        #unless (tries -= 1).zero?
-          msg = "Auth error received: '#{ex.message}'. Login in again then retrying after 3 seconds (remaining: #{tries})..."
-          puts msg
-          logger.warn msg
-          login # FIXME: We might not have the password here
-          sleep 3
-          retry
-        #end
+        msg = "Auth error received: '#{ex.message}'. Login in again then retrying after 3 seconds (remaining: #{tries})..."
+        puts msg
+        logger.warn msg
+        login # FIXME: We might not have the password here
+        sleep 3
+        retry
       end
 
       raise ex # re-raise the exception
@@ -265,11 +263,11 @@ module Spaceship
       params_to_log = params_to_log.collect do |key, value|
         "{#{key}: #{value}}"
       end
-      logger.info("#{method.upcase}: #{url} #{params_to_log.join(', ')}")
+      logger.info(">> #{method.upcase}: #{url} #{params_to_log.join(', ')}")
     end
 
     def log_response(method, url, response)
-      logger.debug("#{method.upcase}: #{url}: #{response.body}")
+      logger.debug("<< #{method.upcase}: #{url}: #{response.body}")
     end
 
     # Actually sends the request to the remote server
