@@ -553,12 +553,12 @@ describe Spaceship::AppVersion, all: true do
       end
 
       it "cannot retry more than twice when ITC is temporarily unable to save changes" do
-        setup_handle_itc_response_failure(2)
+        setup_handle_itc_response_failure(3)
 
         expect do
           version.save!
         end.to raise_error(Spaceship::TunesClient::ITunesConnectTemporaryError)
-        expect(@times_called).to eq(2)
+        expect(@times_called).to eq(3)
       end
     end
 

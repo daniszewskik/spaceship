@@ -791,14 +791,14 @@ module Spaceship
 
     private
 
-    def with_tunes_retry(tries = 2, &block)
+    def with_tunes_retry(tries = 3, &block)
       return block.call
     rescue Spaceship::TunesClient::ITunesConnectTemporaryError => ex
       unless (tries -= 1).zero?
-        msg = "Temporary save error received: '#{ex.message}'.  Retrying after 3 seconds (remaining: #{tries})..."
+        msg = "ITC temporary save error received: '#{ex.message}'. Retrying after 60 seconds (remaining: #{tries})..."
         puts msg
         logger.warn msg
-        sleep 3
+        sleep 60 unless defined?SpecHelper # unless FastlaneCore::Helper.is_test?
         retry
       end
       raise ex # re-raise the exception
