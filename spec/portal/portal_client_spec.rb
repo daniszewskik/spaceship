@@ -241,4 +241,48 @@ describe Spaceship::Client do
       end
     end
   end
+
+  context "communication error" do
+    def handle_response_failure(error, failures)
+      stub_request(:post, "https://developer.apple.com/services-account/QH65B2/").
+        with(body: [], headers: { 'Accept' => '*/*', 'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent' => 'Faraday v0.9.2' }).
+        to_return(status: 200, body: "", headers: {})
+
+      @times_called = 0
+      subject.send(:send_request, :post, "", [], []) do
+        @times_called += 1
+        raise error if @times_called <= failures
+      end
+    end
+
+    describe "#timeout_error" do
+      it "retries when AppleTimeoutError error raised" do
+        handle_response_failure(Spaceship::Client::AppleTimeoutError.new, 2)
+        expect(@times_called).to eq(3)
+      end
+
+      it "re-raises exception when retry limit reached" do
+        expect do
+          handle_response_failure(Spaceship::Client::AppleTimeoutError.new, 5)
+        end.to raise_error(Spaceship::Client::AppleTimeoutError)
+      end
+
+      it "raises AppleTimeoutError when response contains '302 Found'" do
+        stub_request(:post, "https://developer.apple.com/services-account/QH65B2/").
+          with(body: [], headers: { 'Accept' => '*/*', 'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent' => 'Faraday v0.9.2' }).
+          to_return(status: 200, body: ['<title>302 Found</title>'], headers: {})
+
+        expect do
+          subject.send(:send_request, :post, "", [], [])
+        end.to raise_error(Spaceship::Client::AppleTimeoutError)
+      end
+    end
+
+    describe "#auth_error" do
+      it "retries when UnauthorizedAccessError raised" do
+        handle_response_failure(Spaceship::Client::UnauthorizedAccessError, 2)
+        expect(@times_called).to eq(3)
+      end
+    end
+  end
 end
