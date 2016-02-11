@@ -199,7 +199,7 @@ module Spaceship
     rescue Faraday::Error::ConnectionFailed, Faraday::Error::TimeoutError, AppleTimeoutError => ex # New Faraday version: Faraday::TimeoutError => ex
       unless (tries -= 1).zero?
         logger.warn("Timeout received: '#{ex.message}'.  Retrying after 3 seconds (remaining: #{tries})...")
-        sleep 3
+        sleep 3 unless defined?SpecHelper
         retry
       end
       raise ex # re-raise the exception
@@ -209,7 +209,7 @@ module Spaceship
         puts msg
         logger.warn msg
         login # FIXME: We might not have the password here
-        sleep 3
+        sleep 3 unless defined?SpecHelper
         debug_count_recovered
         retry
       end
