@@ -791,7 +791,7 @@ module Spaceship
 
     private
 
-    def with_tunes_retry(tries = 3, &block)
+    def with_tunes_retry(tries = 5, &block)
       return block.call
     rescue Spaceship::TunesClient::ITunesConnectTemporaryError => ex
       unless (tries -= 1).zero?
