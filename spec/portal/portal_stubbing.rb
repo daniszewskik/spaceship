@@ -189,6 +189,12 @@ def adp_stub_download_provisioning_profile_failure
     to_return(status: 404, body: adp_read_fixture_file('download_certificate_failure.html'))
 end
 
+def stub_connection_timeout_302
+  stub_request(:get, "http://example.com/").
+    with(headers: { 'Accept' => '*/*', 'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'User-Agent' => 'Faraday v0.9.2' }).
+    to_return(status: 200, body: ['<title>302 Found</title>'], headers: {})
+end
+
 WebMock.disable_net_connect!
 
 RSpec.configure do |config|

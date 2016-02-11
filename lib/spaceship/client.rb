@@ -214,17 +214,6 @@ module Spaceship
         retry
       end
       raise ex # re-raise the exception
-    rescue UnauthorizedAccessError => ex
-      if @loggedin
-        msg = "Auth error received: '#{ex.message}'. Login in again then retrying after 3 seconds (remaining: #{tries})..."
-        puts msg
-        logger.warn msg
-        login # FIXME: We might not have the password here
-        sleep 3
-        debug_count_recovered
-        retry
-      end
-      raise ex # re-raise the exception
     end
 
     private

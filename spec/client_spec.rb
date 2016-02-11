@@ -2,13 +2,23 @@ require 'spec_helper'
 
 describe Spaceship::Client do
   class TestClient < Spaceship::Client
+
+    attr_accessor :loggedin
+
     def self.hostname
       "http://example.com"
+    end
+
+    @loggedin = true
+
+    def send_login_request(user, password)
+      @loggedin
     end
   end
 
   let(:subject) { TestClient.new }
   let(:time_out_error) { Faraday::Error::TimeoutError.new }
+  let(:unauth_error) { Spaceship::Client::UnauthorizedAccessError.new }
   let(:test_uri) { "http://example.com" }
 
   def send_request
@@ -21,8 +31,12 @@ describe Spaceship::Client do
       to_return(status: status, body: body)
   end
 
+  def stub_client_retry_auth(times, status_ok, status_ng, body)
+    stub_request(:get, test_uri).to_return(status: status_ng, body: body).times(times).then.to_return(status: status_ok, body: body)
+  end
+
   describe 'retry' do
-    it "can retry" do
+    it "re-raises Timeout exception when retry limit reached" do
       stub_client_request(time_out_error, 6, 200, nil)
 
       expect do
@@ -30,12 +44,39 @@ describe Spaceship::Client do
       end.to raise_error(time_out_error)
     end
 
-    it "can recover retries" do
+    it "retries when AppleTimeoutError error raised" do
       body = '{foo: "bar"}'
 
       stub_client_request(time_out_error, 2, 200, body)
 
       expect(send_request.body).to eq(body)
+    end
+
+    it "raises AppleTimeoutError when response contains '302 Found'" do
+      stub_connection_timeout_302
+
+      expect do
+        send_request
+      end.to raise_error(Spaceship::Client::AppleTimeoutError)
+    end
+
+    it "retries login when UnauthorizedAccess Error raised" do
+      body = '{foo: "bar"}'
+      subject.login
+      stub_client_retry_auth(1, 200, 401, body)
+      expect(send_request.body).to eq(body)
+    end
+
+    it "re-raises Unauthorized Access exception if second login fails" do
+      body = '{foo: "bar"}'
+      subject.login
+
+      stub_client_retry_auth(3, 200, 401, body)
+      subject.loggedin = false
+
+      expect do
+        send_request
+      end.to raise_error(Spaceship::Client::UnauthorizedAccessError)
     end
   end
 end
