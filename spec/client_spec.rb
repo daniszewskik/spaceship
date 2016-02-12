@@ -3,16 +3,12 @@ require 'spec_helper'
 describe Spaceship::Client do
   class TestClient < Spaceship::Client
 
-    attr_accessor :loggedin
-
     def self.hostname
       "http://example.com"
     end
 
-    @loggedin = true
-
     def send_login_request(user, password)
-      @loggedin
+      true
     end
   end
 
@@ -68,12 +64,18 @@ describe Spaceship::Client do
     end
 
     it "re-raises Unauthorized Access exception if second login fails" do
+      def subject.send_login_request(user, password)
+        @data ||= Enumerator.new do |x|
+          x.yield true
+          x.yield (raise Spaceship::Client::UnauthorizedAccessError.new)
+        end
+        @data.next
+      end
+
       body = '{foo: "bar"}'
       subject.login
 
-      stub_client_retry_auth(3, 200, 401, body)
-      subject.loggedin = false
-
+      stub_client_retry_auth(1, 200, 401, body)
       expect do
         send_request
       end.to raise_error(Spaceship::Client::UnauthorizedAccessError)
