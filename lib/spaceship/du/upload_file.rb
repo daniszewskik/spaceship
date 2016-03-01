@@ -12,12 +12,14 @@ module Spaceship
     class << self
       def from_path(path)
         raise "Image must exists at path: #{path}" unless File.exist?(path)
+        # md5 from original file becaouse we will compare originals
+        content_md5 = Digest::MD5.hexdigest(File.read(path))
         path = remove_alpha_channel(path) if File.extname(path).downcase == '.png'
 
         content_type = Utilities.content_type(path)
         self.new(
           file_path: path,
-          file_name: File.basename(path),
+          file_name: 'ftl_' + content_md5 + '_' + File.basename(path),
           file_size: File.size(path),
           content_type: content_type,
           bytes: File.read(path)
