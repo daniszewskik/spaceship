@@ -70,6 +70,11 @@ module Spaceship
       [res[1].to_i, res[2].to_i]
     end
 
-    module_function :content_type, :grab_video_preview, :portrait?, :resolution, :video_resolution
+    # returns md5 checksum of given screenshot
+    def get_source_md5(screenshot_path)
+      Digest::MD5.hexdigest(File.read(screenshot_path))
+    end
+
+    module_function :content_type, :grab_video_preview, :portrait?, :resolution, :video_resolution, :get_source_md5
   end
 end
