@@ -75,6 +75,19 @@ module Spaceship
       Digest::MD5.hexdigest(File.read(screenshot_path))
     end
 
-    module_function :content_type, :grab_video_preview, :portrait?, :resolution, :video_resolution, :get_source_md5
+    # returns ITC device name base on screen size code
+    def get_device_name_by_screen(screen_size)
+      map = {
+        'iOS-iPad' => 'ipad',
+        'iOS-iPad-Pro' => 'ipadPro',
+        'iOS-3.5-in' => 'iphone35',
+        'iOS-4-in' => 'iphone4',
+        'iOS-4.7-in' => 'iphone6',
+        'iOS-5.5-in' => 'iphone6Plus'
+      }
+      map[screen_size]
+    end
+
+    module_function :content_type, :grab_video_preview, :portrait?, :resolution, :video_resolution, :get_source_md5, :get_device_name_by_screen
   end
 end
